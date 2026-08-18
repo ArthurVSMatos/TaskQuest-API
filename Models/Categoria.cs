@@ -15,6 +15,9 @@ public class Categoria
     [Column("usuario_id")]
     public Guid UsuarioId { get; set; }
 
+    [Column("descricao")]
+    public string? Descricao { get; set; }
+
     [Required]
     [Column("nome")]
     [MaxLength(50)]
@@ -27,6 +30,10 @@ public class Categoria
 
     [Column("criado_em")]
     public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
+
+    // NOVO: Multiplicador de XP para impactar na gamificação
+    [Column("multiplicador_xp")]
+    public double MultiplicadorXp { get; set; } = 1.0;
 
     // Navegação (Relacionamento com Usuário)
     public Usuario? Usuario { get; set; }
