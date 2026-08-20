@@ -31,6 +31,9 @@ public class HistoricoXP
     public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
 
     // Navegações
+    [ForeignKey("UsuarioId")]
     public Usuario? Usuario { get; set; }
+
+    [ForeignKey("TarefaId")]
     public Tarefa? Tarefa { get; set; }
 }

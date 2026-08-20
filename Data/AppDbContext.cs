@@ -16,5 +16,5 @@ public class AppDbContext : DbContext
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Categoria> Categorias { get; set; }
     public DbSet<Tarefa> Tarefas { get; set; }
-    public DbSet<HistoricoXP> HistoricoXPs { get; set; }
+    public DbSet<HistoricoXP> HistoricoXP { get; set; }
 }

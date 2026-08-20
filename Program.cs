@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using TaskQuest.API.Data;
+using TaskQuest.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,6 +86,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 // ======================================================
+// SERVIÇOS
+// ======================================================
+
+builder.Services.AddScoped<GamificationService>();
+
+// ======================================================
 // SWAGGER
 // ======================================================
 
@@ -142,14 +149,11 @@ if (app.Environment.IsDevelopment())
 // PIPELINE HTTP
 // ======================================================
 
-// HTTPS
 app.UseHttpsRedirection();
 
-// Autenticação deve vir antes da autorização
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Controllers
 app.MapControllers();
 
 // ======================================================
