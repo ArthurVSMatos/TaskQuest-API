@@ -6,8 +6,11 @@ using Microsoft.OpenApi.Models;
 using TaskQuest.API.Data;
 using TaskQuest.API.Services;
 
-var builder = WebApplication.CreateBuilder(args);
-
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    EnvironmentName = "Production"
+});
 // ======================================================
 // BANCO DE DADOS (PostgreSQL)
 // ======================================================
@@ -110,6 +113,9 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 var app = builder.Build();
 
