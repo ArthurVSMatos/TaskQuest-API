@@ -176,12 +176,14 @@ public class TarefasController : ControllerBase
         {
             return NotFound(new { mensagem = "Usuário não encontrado." });
         }
+        
 
         // Marcar a tarefa como concluída
         DateTime agora = DateTime.UtcNow;
         tarefa.Status = "CONCLUIDA";
         tarefa.TempoRealMin = dto.TempoRealMin;
         tarefa.ConcluidoEm = agora;
+        
 
         // Calcular XP com base na Gamificação
         int xpGanho = _gamificationService.CalcularXpTarefa(tarefa.Prioridade, tarefa.DataVencimento, agora);

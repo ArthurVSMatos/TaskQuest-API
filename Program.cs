@@ -9,15 +9,13 @@ using TaskQuest.API.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // ======================================================
-// BANCO DE DADOS
+// BANCO DE DADOS (PostgreSQL)
 // ======================================================
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? throw new InvalidOperationException(
-            "Connection string 'DefaultConnection' não configurada."
-        )
+        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' não configurada.")
     )
 );
 
@@ -26,37 +24,21 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // ======================================================
 
 var jwtSecret = builder.Configuration["JwtSettings:Secret"]
-    ?? throw new InvalidOperationException(
-        "JWT Secret não configurado em 'JwtSettings:Secret'."
-    );
+    ?? throw new InvalidOperationException("JWT Secret não configurado em 'JwtSettings:Secret'.");
 
 var jwtIssuer = builder.Configuration["JwtSettings:Issuer"]
-    ?? throw new InvalidOperationException(
-        "JWT Issuer não configurado em 'JwtSettings:Issuer'."
-    );
+    ?? throw new InvalidOperationException("JWT Issuer não configurado em 'JwtSettings:Issuer'.");
 
 var jwtAudience = builder.Configuration["JwtSettings:Audience"]
-    ?? throw new InvalidOperationException(
-        "JWT Audience não configurado em 'JwtSettings:Audience'."
-    );
-
-if (string.IsNullOrWhiteSpace(jwtSecret))
-{
-    throw new InvalidOperationException(
-        "JWT Secret não pode estar vazio."
-    );
-}
+    ?? throw new InvalidOperationException("JWT Audience não configurado em 'JwtSettings:Audience'.");
 
 var key = Encoding.UTF8.GetBytes(jwtSecret);
 
 builder.Services
     .AddAuthentication(options =>
     {
-        options.DefaultAuthenticateScheme =
-            JwtBearerDefaults.AuthenticationScheme;
-
-        options.DefaultChallengeScheme =
-            JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     })
     .AddJwtBearer(options =>
     {
@@ -64,31 +46,35 @@ builder.Services
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(key),
-
             ValidateIssuer = true,
             ValidIssuer = jwtIssuer,
-
             ValidateAudience = true,
             ValidAudience = jwtAudience,
-
             ValidateLifetime = true,
-
             ClockSkew = TimeSpan.Zero
         };
     });
 
 // ======================================================
-// CONTROLLERS
+// CORS
+// ======================================================
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+// ======================================================
+// CONTROLLERS E SERVIÇOS
 // ======================================================
 
 builder.Services.AddControllers();
-
 builder.Services.AddEndpointsApiExplorer();
-
-// ======================================================
-// SERVIÇOS
-// ======================================================
-
 builder.Services.AddScoped<GamificationService>();
 
 // ======================================================
@@ -97,11 +83,7 @@ builder.Services.AddScoped<GamificationService>();
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "TaskQuest API",
-        Version = "v1"
-    });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "TaskQuest API", Version = "v1" });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -129,35 +111,31 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ======================================================
-// CONSTRUÇÃO DA APLICAÇÃO
-// ======================================================
-
 var app = builder.Build();
 
 // ======================================================
-// SWAGGER - DESENVOLVIMENTO
+// AUTO-MIGRATION DO BANCO EM PRODUÇÃO
 // ======================================================
 
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
 }
 
 // ======================================================
 // PIPELINE HTTP
 // ======================================================
 
-app.UseHttpsRedirection();
+// Habilita o Swagger no Render para testes
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-// ======================================================
-// INICIALIZAÇÃO
-// ======================================================
 
 app.Run();

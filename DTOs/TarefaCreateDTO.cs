@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace TaskQuest.API.DTOs;
 
-public class TarefaCreateDto
+public class TarefaCreateDto : IValidatableObject
 {
     [Required(ErrorMessage = "O título é obrigatório.")]
     [StringLength(150, ErrorMessage = "O título não pode exceder 150 caracteres.")]
@@ -21,4 +22,16 @@ public class TarefaCreateDto
 
     [RegularExpression("^(BAIXA|MEDIA|ALTA)$", ErrorMessage = "A prioridade deve ser BAIXA, MEDIA ou ALTA.")]
     public string Prioridade { get; set; } = "MEDIA";
+
+    // Validação executada automaticamente antes de chegar na sua Controller
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (DataVencimento < DateTime.UtcNow)
+        {
+            yield return new ValidationResult(
+                "A data de vencimento deve ser posterior ao momento atual.",
+                new[] { nameof(DataVencimento) }
+            );
+        }
+    }
 }
